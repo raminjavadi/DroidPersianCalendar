@@ -200,7 +200,7 @@ public class CompassFragment extends DaggerFragment {
                 sensorManager.registerListener(compassListener, sensor,
                         SensorManager.SENSOR_DELAY_FASTEST);
                 if (coordinate == null) {
-                    createAndShowSnackbar(mainActivity.getCoordinator(), R.string.set_location, Snackbar.LENGTH_LONG);
+                    createAndShowSnackbar(mainActivity.getMCoordinator(), R.string.set_location, Snackbar.LENGTH_LONG);
                 }
             } else {
                 Toast.makeText(mainActivity, R.string.compass_not_found, Toast.LENGTH_LONG).show();

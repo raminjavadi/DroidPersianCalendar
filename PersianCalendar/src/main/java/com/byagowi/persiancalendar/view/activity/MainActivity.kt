@@ -43,15 +43,15 @@ import javax.inject.Inject
  */
 class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener, NavigationView.OnNavigationItemSelectedListener {
     @Inject
-    lateinit var appDependency: AppDependency // same object from App
+    lateinit var mAppDependency: AppDependency // same object from App
     @Inject
-    lateinit var mainActivityDependency: MainActivityDependency
-    private lateinit var binding: ActivityMainBinding
+    lateinit var mMainActivityDependency: MainActivityDependency
+    private lateinit var mBinding: ActivityMainBinding
     private lateinit var mNavOptions: NavOptions
-    private var creationDateJdn: Long = 0
-    private var settingHasChanged = false
+    private var mCreationDateJdn: Long = 0
+    private var mSettingHasChanged = false
 
-    val coordinator: CoordinatorLayout by lazy { binding.coordinator }
+    val mCoordinator: CoordinatorLayout by lazy { mBinding.coordinator }
 
     private val seasonImage: Int by lazy {
         var isSouthernHemisphere = false
@@ -72,7 +72,7 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Don't replace below with appDependency.getSharedPreferences() ever
+        // Don't replace below with mAppDependency.getSharedPreferences() ever
         // as the injection won't happen at the right time
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         setTheme(UIUtils.getThemeFromName(prefs.getString(PREF_THEME, LIGHT_THEME) ?: LIGHT_THEME))
@@ -93,8 +93,8 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
         UpdateUtils.setDeviceCalendarEvents(applicationContext)
         UpdateUtils.update(applicationContext, false)
 
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        setSupportActionBar(binding.toolbar)
+        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        setSupportActionBar(mBinding.toolbar)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             window.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,
@@ -103,7 +103,7 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
 
         val isRTL = UIUtils.isRTL(this)
 
-        val drawerToggle = object : ActionBarDrawerToggle(this, binding.drawer, binding.toolbar, R.string.openDrawer, R.string.closeDrawer) {
+        val drawerToggle = object : ActionBarDrawerToggle(this, mBinding.drawer, mBinding.toolbar, R.string.openDrawer, R.string.closeDrawer) {
             val slidingDirection = if (isRTL) -1 else +1
 
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
@@ -112,13 +112,13 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
             }
 
             private fun slidingAnimation(drawerView: View, slideOffset: Float) {
-                binding.appMainLayout.translationX = slideOffset * drawerView.width.toFloat() * slidingDirection.toFloat()
-                binding.drawer.bringChildToFront(drawerView)
-                binding.drawer.requestLayout()
+                mBinding.appMainLayout.translationX = slideOffset * drawerView.width.toFloat() * slidingDirection.toFloat()
+                mBinding.drawer.bringChildToFront(drawerView)
+                mBinding.drawer.requestLayout()
             }
         }
 
-        binding.drawer.addDrawerListener(drawerToggle)
+        mBinding.drawer.addDrawerListener(drawerToggle)
         drawerToggle.syncState()
 
         mNavOptions = NavOptions.Builder()
@@ -144,13 +144,13 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
             }
         }
 
-        binding.navigation.setNavigationItemSelectedListener(this)
+        mBinding.navigation.setNavigationItemSelectedListener(this)
 
-        (binding.navigation.getHeaderView(0).findViewById<View>(R.id.season_image) as ImageView)
+        (mBinding.navigation.getHeaderView(0).findViewById<View>(R.id.season_image) as ImageView)
                 .setImageResource(seasonImage)
 
         if (prefs.getString(PREF_APP_LANGUAGE, "N/A") == "N/A" && !prefs.getBoolean(Constants.CHANGE_LANGUAGE_IS_PROMOTED_ONCE, false)) {
-            val snackbar = Snackbar.make(coordinator, "✖  Change app language?",
+            val snackbar = Snackbar.make(mCoordinator, "✖  Change app language?",
                     10000)
             val snackbarView = snackbar.view
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
@@ -179,25 +179,25 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            binding.appbarLayout.outlineProvider = null
+            mBinding.appbarLayout.outlineProvider = null
         }
 
-        creationDateJdn = CalendarUtils.getTodayJdn()
+        mCreationDateJdn = CalendarUtils.getTodayJdn()
         Utils.applyAppLanguage(this)
     }
 
     fun navigateTo(@IdRes id: Int) {
-        val menuItem = binding.navigation.menu.findItem(
+        val menuItem = mBinding.navigation.menu.findItem(
                 if (id == R.id.level) R.id.compass else id) // We don't have a menu entry for compass, so
         if (menuItem != null) {
             menuItem.isCheckable = true
             menuItem.isChecked = true
         }
 
-        if (settingHasChanged) { // update when checked menu item is changed
+        if (mSettingHasChanged) { // update when checked menu item is changed
             Utils.initUtils(this)
             UpdateUtils.update(applicationContext, true)
-            settingHasChanged = false // reset for the next time
+            mSettingHasChanged = false // reset for the next time
         }
 
         Navigation.findNavController(this, R.id.nav_host_fragment)
@@ -205,7 +205,7 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-        settingHasChanged = true
+        mSettingHasChanged = true
         if (key == PREF_APP_LANGUAGE) {
             var persianDigits = false
             var changeToAfghanistanHolidays = false
@@ -314,7 +314,7 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
         Utils.updateStoredPreference(this)
         UpdateUtils.update(applicationContext, true)
 
-        appDependency.localBroadcastManager
+        mAppDependency.localBroadcastManager
                 .sendBroadcast(Intent(Constants.LOCAL_INTENT_UPDATE_PREFERENCE))
     }
 
@@ -339,7 +339,7 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
         super.onConfigurationChanged(newConfig)
         Utils.initUtils(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            binding.drawer.layoutDirection = if (UIUtils.isRTL(this)) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            mBinding.drawer.layoutDirection = if (UIUtils.isRTL(this)) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
         }
     }
 
@@ -347,7 +347,7 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
         super.onResume()
         Utils.applyAppLanguage(this)
         UpdateUtils.update(applicationContext, false)
-        if (creationDateJdn != CalendarUtils.getTodayJdn()) {
+        if (mCreationDateJdn != CalendarUtils.getTodayJdn()) {
             recreate()
         }
     }
@@ -355,10 +355,10 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         // Checking for the "menu" key
         return if (keyCode == KeyEvent.KEYCODE_MENU) {
-            if (binding.drawer.isDrawerOpen(GravityCompat.START)) {
-                binding.drawer.closeDrawers()
+            if (mBinding.drawer.isDrawerOpen(GravityCompat.START)) {
+                mBinding.drawer.closeDrawers()
             } else {
-                binding.drawer.openDrawer(GravityCompat.START)
+                mBinding.drawer.openDrawer(GravityCompat.START)
             }
             true
         } else {
@@ -378,7 +378,7 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
             return true
         }
 
-        binding.drawer.closeDrawers()
+        mBinding.drawer.closeDrawers()
         navigateTo(menuItem.itemId)
         return true
     }
@@ -389,8 +389,8 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
     }
 
     override fun onBackPressed() {
-        if (binding.drawer.isDrawerOpen(GravityCompat.START)) {
-            binding.drawer.closeDrawers()
+        if (mBinding.drawer.isDrawerOpen(GravityCompat.START)) {
+            mBinding.drawer.closeDrawers()
         } else {
             val calendarFragment = supportFragmentManager
                     .findFragmentByTag(CalendarFragment::class.java.name) as CalendarFragment?

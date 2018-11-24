@@ -90,7 +90,7 @@ public class RecyclerListAdapter extends RecyclerView.Adapter<RecyclerListAdapte
         // Easter egg when all are swiped
         if (titles.size() == 0) {
             try {
-                View view = mainActivityDependency.getMainActivity().getCoordinator();
+                View view = mainActivityDependency.getMainActivity().getMCoordinator();
                 ValueAnimator animator = ValueAnimator.ofFloat(0, 360);
                 animator.setDuration(3000L);
                 animator.setInterpolator(new AccelerateDecelerateInterpolator());
