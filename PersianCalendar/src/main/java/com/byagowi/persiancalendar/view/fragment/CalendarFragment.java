@@ -242,7 +242,7 @@ public class CalendarFragment extends DaggerFragment {
                     UIUtils.askForCalendarPermission(activity);
                 } else {
                     UIUtils.toggleShowDeviceCalendarOnPreference(activity, true);
-                    activity.restartActivity();
+                    activity.recreate();
                 }
             }
         }

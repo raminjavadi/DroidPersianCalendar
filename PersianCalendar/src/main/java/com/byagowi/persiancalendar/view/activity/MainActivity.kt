@@ -329,7 +329,7 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
                         .findNavController(this, R.id.nav_host_fragment)
                         .currentDestination
                 if (currentDestination != null && currentDestination.id == R.id.calendar) {
-                    restartActivity()
+                    recreate()
                 }
             } else {
                 UIUtils.toggleShowDeviceCalendarOnPreference(this, false)
@@ -350,7 +350,7 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
         Utils.applyAppLanguage(this)
         UpdateUtils.update(applicationContext, false)
         if (creationDateJdn != CalendarUtils.getTodayJdn()) {
-            restartActivity()
+            recreate()
         }
     }
 
@@ -366,11 +366,6 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
         } else {
             super.onKeyDown(keyCode, event)
         }
-    }
-
-    fun restartActivity() {
-        finish()
-        startActivity(intent)
     }
 
     private fun restartToSettings() {
