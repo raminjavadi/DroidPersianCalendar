@@ -12,7 +12,6 @@ import android.preference.PreferenceManager
 import android.view.*
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.annotation.DrawableRes
 import androidx.annotation.IdRes
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -47,41 +46,36 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
     lateinit var appDependency: AppDependency // same object from App
     @Inject
     lateinit var mainActivityDependency: MainActivityDependency
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var mNavOptions: NavOptions
     private var creationDateJdn: Long = 0
     private var settingHasChanged = false
-    private var mNavOptions: NavOptions? = null
-    private lateinit var binding: ActivityMainBinding
 
-    val coordinator: CoordinatorLayout
-        get() = binding.coordinator
+    val coordinator: CoordinatorLayout by lazy { binding.coordinator }
 
-    private val seasonImage: Int
-        @DrawableRes
-        get() {
-            var isSouthernHemisphere = false
-            val coordinate = Utils.getCoordinate(this)
-            if (coordinate != null && coordinate.latitude < 0) {
-                isSouthernHemisphere = true
-            }
-
-            var month = CalendarUtils.getTodayOfCalendar(CalendarType.SHAMSI).month
-            if (isSouthernHemisphere) month = (month + 6 - 1) % 12 + 1
-
-            return if (month < 4)
-                R.drawable.spring
-            else if (month < 7)
-                R.drawable.summer
-            else if (month < 10)
-                R.drawable.fall
-            else
-                R.drawable.winter
+    private val seasonImage: Int by lazy {
+        var isSouthernHemisphere = false
+        val coordinate = Utils.getCoordinate(this)
+        if (coordinate != null && coordinate.latitude < 0) {
+            isSouthernHemisphere = true
         }
+
+        var month = CalendarUtils.getTodayOfCalendar(CalendarType.SHAMSI).month
+        if (isSouthernHemisphere) month = (month + 6 - 1) % 12 + 1
+
+        when {
+            month < 4 -> R.drawable.spring
+            month < 7 -> R.drawable.summer
+            month < 10 -> R.drawable.fall
+            else -> R.drawable.winter
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Don't replace below with appDependency.getSharedPreferences() ever
         // as the injection won't happen at the right time
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        setTheme(UIUtils.getThemeFromName(prefs.getString(PREF_THEME, LIGHT_THEME)!!))
+        setTheme(UIUtils.getThemeFromName(prefs.getString(PREF_THEME, LIGHT_THEME) ?: LIGHT_THEME))
 
         Utils.applyAppLanguage(this)
 
@@ -110,7 +104,7 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
         val isRTL = UIUtils.isRTL(this)
 
         val drawerToggle = object : ActionBarDrawerToggle(this, binding.drawer, binding.toolbar, R.string.openDrawer, R.string.closeDrawer) {
-            internal var slidingDirection = if (isRTL) -1 else +1
+            val slidingDirection = if (isRTL) -1 else +1
 
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
                 super.onDrawerSlide(drawerView, slideOffset)
@@ -134,17 +128,13 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
                 .setPopExitAnim(android.R.anim.fade_out)
                 .build()
 
-        val action = if (intent != null) intent.action else null
-        if ("COMPASS" == action)
-            navigateTo(R.id.compass)
-        else if ("LEVEL" == action)
-            navigateTo(R.id.level)
-        else if ("CONVERTER" == action)
-            navigateTo(R.id.converter)
-        else if ("SETTINGS" == action)
-            navigateTo(R.id.settings)
-        else
-            navigateTo(R.id.calendar)
+        when (intent?.action) {
+            "COMPASS" -> navigateTo(R.id.compass)
+            "LEVEL" -> navigateTo(R.id.level)
+            "CONVERTER" -> navigateTo(R.id.converter)
+            "SETTINGS" -> navigateTo(R.id.settings)
+            else -> navigateTo(R.id.calendar)
+        }
 
         prefs.registerOnSharedPreferenceChangeListener(this)
 
@@ -169,8 +159,8 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
             val text = snackbar.view.findViewById<TextView>(com.google.android.material.R.id.snackbar_text)
             text.setTextColor(Color.WHITE)
 
-            snackbarView.setOnClickListener { v -> snackbar.dismiss() }
-            snackbar.setAction("Settings") { view ->
+            snackbarView.setOnClickListener { snackbar.dismiss() }
+            snackbar.setAction("Settings") {
                 val edit = prefs.edit()
                 edit.putString(Constants.PREF_APP_LANGUAGE, Constants.LANG_EN_US)
                 edit.putString(PREF_MAIN_CALENDAR_KEY, "GREGORIAN")
@@ -281,21 +271,25 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
                             HashSet(listOf("iran_holidays")))
                 }
             }
-            if (changeToGregorianCalendar) {
-                editor.putString(PREF_MAIN_CALENDAR_KEY, "GREGORIAN")
-                editor.putString(PREF_OTHER_CALENDARS_KEY, "ISLAMIC,SHAMSI")
-                editor.putString(PREF_WEEK_START, "1")
-                editor.putStringSet(PREF_WEEK_ENDS, HashSet(listOf("1")))
-            } else if (changeToIslamicCalendar) {
-                editor.putString(PREF_MAIN_CALENDAR_KEY, "ISLAMIC")
-                editor.putString(PREF_OTHER_CALENDARS_KEY, "GREGORIAN,SHAMSI")
-                editor.putString(PREF_WEEK_START, DEFAULT_WEEK_START)
-                editor.putStringSet(PREF_WEEK_ENDS, DEFAULT_WEEK_ENDS)
-            } else if (changeToPersianCalendar) {
-                editor.putString(PREF_MAIN_CALENDAR_KEY, "SHAMSI")
-                editor.putString(PREF_OTHER_CALENDARS_KEY, "GREGORIAN,ISLAMIC")
-                editor.putString(PREF_WEEK_START, DEFAULT_WEEK_START)
-                editor.putStringSet(PREF_WEEK_ENDS, DEFAULT_WEEK_ENDS)
+            when {
+                changeToGregorianCalendar -> {
+                    editor.putString(PREF_MAIN_CALENDAR_KEY, "GREGORIAN")
+                    editor.putString(PREF_OTHER_CALENDARS_KEY, "ISLAMIC,SHAMSI")
+                    editor.putString(PREF_WEEK_START, "1")
+                    editor.putStringSet(PREF_WEEK_ENDS, HashSet(listOf("1")))
+                }
+                changeToIslamicCalendar -> {
+                    editor.putString(PREF_MAIN_CALENDAR_KEY, "ISLAMIC")
+                    editor.putString(PREF_OTHER_CALENDARS_KEY, "GREGORIAN,SHAMSI")
+                    editor.putString(PREF_WEEK_START, DEFAULT_WEEK_START)
+                    editor.putStringSet(PREF_WEEK_ENDS, DEFAULT_WEEK_ENDS)
+                }
+                changeToPersianCalendar -> {
+                    editor.putString(PREF_MAIN_CALENDAR_KEY, "SHAMSI")
+                    editor.putString(PREF_OTHER_CALENDARS_KEY, "GREGORIAN,ISLAMIC")
+                    editor.putString(PREF_WEEK_START, DEFAULT_WEEK_START)
+                    editor.putStringSet(PREF_WEEK_ENDS, DEFAULT_WEEK_ENDS)
+                }
             }
             editor.apply()
         }
@@ -362,27 +356,25 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         // Checking for the "menu" key
-        if (keyCode == KeyEvent.KEYCODE_MENU) {
+        return if (keyCode == KeyEvent.KEYCODE_MENU) {
             if (binding.drawer.isDrawerOpen(GravityCompat.START)) {
                 binding.drawer.closeDrawers()
             } else {
                 binding.drawer.openDrawer(GravityCompat.START)
             }
-            return true
+            true
         } else {
-            return super.onKeyDown(keyCode, event)
+            super.onKeyDown(keyCode, event)
         }
     }
 
     fun restartActivity() {
-        val intent = intent
         finish()
         startActivity(intent)
     }
 
-    fun restartToSettings() {
-        val intent = intent
-        intent.action = "SETTINGS"
+    private fun restartToSettings() {
+        intent?.action = "SETTINGS"
         finish()
         startActivity(intent)
     }
@@ -410,15 +402,13 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
             val calendarFragment = supportFragmentManager
                     .findFragmentByTag(CalendarFragment::class.java.name) as CalendarFragment?
 
-            if (calendarFragment != null) {
-                if (calendarFragment.closeSearch())
-                    return
-            }
+            if (calendarFragment?.closeSearch() == true)
+                return
 
             val currentDestination = Navigation
                     .findNavController(this, R.id.nav_host_fragment)
                     .currentDestination
-            if (currentDestination == null || currentDestination.id == R.id.calendar)
+            if (currentDestination?.id == R.id.calendar)
                 finish()
             else
                 navigateTo(R.id.calendar)
