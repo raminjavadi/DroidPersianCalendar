@@ -161,12 +161,12 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
 
             snackbarView.setOnClickListener { snackbar.dismiss() }
             snackbar.setAction("Settings") {
-                val edit = prefs.edit()
-                edit.putString(Constants.PREF_APP_LANGUAGE, Constants.LANG_EN_US)
-                edit.putString(PREF_MAIN_CALENDAR_KEY, "GREGORIAN")
-                edit.putString(PREF_OTHER_CALENDARS_KEY, "ISLAMIC,SHAMSI")
-                edit.putStringSet(PREF_HOLIDAY_TYPES, HashSet())
-                edit.apply()
+                prefs.edit().apply {
+                    putString(Constants.PREF_APP_LANGUAGE, Constants.LANG_EN_US)
+                    putString(PREF_MAIN_CALENDAR_KEY, "GREGORIAN")
+                    putString(PREF_OTHER_CALENDARS_KEY, "ISLAMIC,SHAMSI")
+                    putStringSet(PREF_HOLIDAY_TYPES, HashSet())
+                }.apply()
 
                 restartToSettings()
             }
@@ -174,9 +174,7 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
             snackbar.show()
 
             // Show this snackbar only once
-            val edit = prefs.edit()
-            edit.putBoolean(Constants.CHANGE_LANGUAGE_IS_PROMOTED_ONCE, true)
-            edit.apply()
+            prefs.edit().apply { putBoolean(Constants.CHANGE_LANGUAGE_IS_PROMOTED_ONCE, true) }.apply()
         }
 
 
@@ -250,48 +248,48 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
                 else -> persianDigits = true
             }
 
-            val editor = sharedPreferences.edit()
-            editor.putBoolean(PREF_PERSIAN_DIGITS, persianDigits)
-            // Enable Afghanistan holidays when Dari or Pashto is set
-            if (changeToAfghanistanHolidays) {
-                val currentHolidays = sharedPreferences.getStringSet(PREF_HOLIDAY_TYPES, HashSet())
+            sharedPreferences.edit().apply {
+                putBoolean(PREF_PERSIAN_DIGITS, persianDigits)
+                // Enable Afghanistan holidays when Dari or Pashto is set
+                if (changeToAfghanistanHolidays) {
+                    val currentHolidays = sharedPreferences.getStringSet(PREF_HOLIDAY_TYPES, HashSet())
 
-                if (currentHolidays == null || currentHolidays.isEmpty() ||
-                        currentHolidays.size == 1 && currentHolidays.contains("iran_holidays")) {
-                    editor.putStringSet(PREF_HOLIDAY_TYPES,
-                            HashSet(listOf("afghanistan_holidays")))
+                    if (currentHolidays == null || currentHolidays.isEmpty() ||
+                            currentHolidays.size == 1 && currentHolidays.contains("iran_holidays")) {
+                        putStringSet(PREF_HOLIDAY_TYPES,
+                                HashSet(listOf("afghanistan_holidays")))
+                    }
                 }
-            }
-            if (changeToIranEvents) {
-                val currentHolidays = sharedPreferences.getStringSet(PREF_HOLIDAY_TYPES, HashSet())
+                if (changeToIranEvents) {
+                    val currentHolidays = sharedPreferences.getStringSet(PREF_HOLIDAY_TYPES, HashSet())
 
-                if (currentHolidays == null || currentHolidays.isEmpty() ||
-                        currentHolidays.size == 1 && currentHolidays.contains("afghanistan_holidays")) {
-                    editor.putStringSet(PREF_HOLIDAY_TYPES,
-                            HashSet(listOf("iran_holidays")))
+                    if (currentHolidays == null || currentHolidays.isEmpty() ||
+                            currentHolidays.size == 1 && currentHolidays.contains("afghanistan_holidays")) {
+                        putStringSet(PREF_HOLIDAY_TYPES,
+                                HashSet(listOf("iran_holidays")))
+                    }
                 }
-            }
-            when {
-                changeToGregorianCalendar -> {
-                    editor.putString(PREF_MAIN_CALENDAR_KEY, "GREGORIAN")
-                    editor.putString(PREF_OTHER_CALENDARS_KEY, "ISLAMIC,SHAMSI")
-                    editor.putString(PREF_WEEK_START, "1")
-                    editor.putStringSet(PREF_WEEK_ENDS, HashSet(listOf("1")))
+                when {
+                    changeToGregorianCalendar -> {
+                        putString(PREF_MAIN_CALENDAR_KEY, "GREGORIAN")
+                        putString(PREF_OTHER_CALENDARS_KEY, "ISLAMIC,SHAMSI")
+                        putString(PREF_WEEK_START, "1")
+                        putStringSet(PREF_WEEK_ENDS, HashSet(listOf("1")))
+                    }
+                    changeToIslamicCalendar -> {
+                        putString(PREF_MAIN_CALENDAR_KEY, "ISLAMIC")
+                        putString(PREF_OTHER_CALENDARS_KEY, "GREGORIAN,SHAMSI")
+                        putString(PREF_WEEK_START, DEFAULT_WEEK_START)
+                        putStringSet(PREF_WEEK_ENDS, DEFAULT_WEEK_ENDS)
+                    }
+                    changeToPersianCalendar -> {
+                        putString(PREF_MAIN_CALENDAR_KEY, "SHAMSI")
+                        putString(PREF_OTHER_CALENDARS_KEY, "GREGORIAN,ISLAMIC")
+                        putString(PREF_WEEK_START, DEFAULT_WEEK_START)
+                        putStringSet(PREF_WEEK_ENDS, DEFAULT_WEEK_ENDS)
+                    }
                 }
-                changeToIslamicCalendar -> {
-                    editor.putString(PREF_MAIN_CALENDAR_KEY, "ISLAMIC")
-                    editor.putString(PREF_OTHER_CALENDARS_KEY, "GREGORIAN,SHAMSI")
-                    editor.putString(PREF_WEEK_START, DEFAULT_WEEK_START)
-                    editor.putStringSet(PREF_WEEK_ENDS, DEFAULT_WEEK_ENDS)
-                }
-                changeToPersianCalendar -> {
-                    editor.putString(PREF_MAIN_CALENDAR_KEY, "SHAMSI")
-                    editor.putString(PREF_OTHER_CALENDARS_KEY, "GREGORIAN,ISLAMIC")
-                    editor.putString(PREF_WEEK_START, DEFAULT_WEEK_START)
-                    editor.putStringSet(PREF_WEEK_ENDS, DEFAULT_WEEK_ENDS)
-                }
-            }
-            editor.apply()
+            }.apply()
         }
 
         if (key == PREF_SHOW_DEVICE_CALENDAR_EVENTS) {
