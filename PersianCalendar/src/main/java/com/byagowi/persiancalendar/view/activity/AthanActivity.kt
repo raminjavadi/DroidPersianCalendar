@@ -32,7 +32,6 @@ class AthanActivity : AppCompatActivity() {
                     this@AthanActivity.finish()
                     return
                 }
-
             } catch (e: Exception) {
                 e.printStackTrace()
                 this@AthanActivity.finish()
@@ -58,16 +57,14 @@ class AthanActivity : AppCompatActivity() {
 
         val customAthanUri = Utils.getCustomAthanUri(this)
         if (customAthanUri != null) {
-            try {
-                mRingtone = RingtoneManager.getRingtone(this, customAthanUri).apply {
+            mRingtone = RingtoneManager.getRingtone(this, customAthanUri).apply {
+                try {
                     streamType = AudioManager.STREAM_ALARM
                     play()
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
-
         } else {
             mMediaPlayer = MediaPlayer().apply {
                 try {
@@ -84,6 +81,7 @@ class AthanActivity : AppCompatActivity() {
                     e.printStackTrace()
                 }
             }
+
         }
 
         Utils.applyAppLanguage(this)
