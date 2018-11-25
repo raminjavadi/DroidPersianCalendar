@@ -20,6 +20,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.net.toUri
 import com.byagowi.persiancalendar.Constants
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.DialogEmailBinding
@@ -33,13 +34,13 @@ import javax.inject.Inject
 class AboutFragment : DaggerFragment() {
 
     @Inject
-    lateinit var mainActivityDependency: MainActivityDependency
+    lateinit var mMainActivityDependency: MainActivityDependency
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         val binding = FragmentAboutBinding.inflate(inflater, container, false)
 
-        val activity = mainActivityDependency.mainActivity
+        val activity = mMainActivityDependency.mainActivity
         activity.setTitleAndSubtitle(getString(R.string.about), "")
 
         // version
@@ -48,7 +49,7 @@ class AboutFragment : DaggerFragment() {
         binding.version.text = String.format(getString(R.string.version), TextUtils.join("\n", version))
 
         // licenses
-        binding.licenses.setOnClickListener { arg ->
+        binding.licenses.setOnClickListener {
             val builder = AlertDialog.Builder(activity)
             builder.setTitle(resources.getString(R.string.about_license_title))
             val licenseTextView = TextView(activity)
@@ -76,26 +77,26 @@ class AboutFragment : DaggerFragment() {
         }
 
         // report bug
-        binding.reportBug.setOnClickListener { arg ->
+        binding.reportBug.setOnClickListener {
             try {
                 startActivity(Intent(Intent.ACTION_VIEW,
-                        Uri.parse("https://github.com/ebraminio/DroidPersianCalendar/issues/new")))
+                        "https://github.com/ebraminio/DroidPersianCalendar/issues/new".toUri()))
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
 
-        binding.email.setOnClickListener { arg ->
+        binding.email.setOnClickListener {
             val emailBinding = DialogEmailBinding.inflate(inflater, container, false)
-            AlertDialog.Builder(mainActivityDependency.mainActivity)
+            AlertDialog.Builder(mMainActivityDependency.mainActivity)
                     .setView(emailBinding.root)
                     .setTitle(R.string.about_email_sum)
-                    .setPositiveButton(R.string.continue_button) { dialog, id ->
+                    .setPositiveButton(R.string.continue_button) { _, _ ->
                         val emailIntent = Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", "ebrahim@gnu.org", null))
                         emailIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name))
                         try {
                             emailIntent.putExtra(Intent.EXTRA_TEXT,
-                                    String.format(emailBinding.inputText.text!!.toString() + "\n\n\n\n\n\n\n===Device Information===\nManufacturer: %s\nModel: %s\nAndroid Version: %s\nApp Version Code: %s",
+                                    String.format(emailBinding.inputText.text.toString() + "\n\n\n\n\n\n\n===Device Information===\nManufacturer: %s\nModel: %s\nAndroid Version: %s\nApp Version Code: %s",
                                             Build.MANUFACTURER, Build.MODEL, Build.VERSION.RELEASE, version[0]))
                             startActivity(Intent.createChooser(emailIntent, getString(R.string.about_sendMail)))
                         } catch (ex: android.content.ActivityNotFoundException) {
@@ -107,9 +108,8 @@ class AboutFragment : DaggerFragment() {
 
         val developerIcon = AppCompatResources.getDrawable(activity, R.drawable.ic_developer)
         val designerIcon = AppCompatResources.getDrawable(activity, R.drawable.ic_designer)
-        val theme = activity.theme
         val color = TypedValue()
-        theme.resolveAttribute(R.attr.colorDrawerIcon, color, true)
+        activity.theme.resolveAttribute(R.attr.colorDrawerIcon, color, true)
 
         val layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -126,32 +126,33 @@ class AboutFragment : DaggerFragment() {
         }
 
         for (line in getString(R.string.about_developers_list).trim { it <= ' ' }.split("\n".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()) {
-            val chip = Chip(activity)
-            chip.layoutParams = layoutParams
-            chip.setOnClickListener(chipClick)
-            chip.text = line
-            chip.chipIcon = developerIcon
-            chip.setChipIconTintResource(color.resourceId)
-            binding.developers.addView(chip)
+            binding.developers.addView(Chip(activity).apply {
+                this.layoutParams = layoutParams
+                setOnClickListener(chipClick)
+                text = line
+                chipIcon = developerIcon
+                setChipIconTintResource(color.resourceId)
+            })
         }
 
         for (line in getString(R.string.about_designers_list).trim { it <= ' ' }.split("\n".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()) {
-            val chip = Chip(activity)
-            chip.layoutParams = layoutParams
-            chip.text = line
-            chip.chipIcon = designerIcon
-            chip.setChipIconTintResource(color.resourceId)
-            binding.developers.addView(chip)
+            binding.developers.addView(Chip(activity).apply {
+                this.layoutParams = layoutParams
+                setOnClickListener(chipClick)
+                text = line
+                chipIcon = designerIcon
+                setChipIconTintResource(color.resourceId)
+            })
         }
 
         for (line in getString(R.string.about_contributors_list).trim { it <= ' ' }.split("\n".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()) {
-            val chip = Chip(activity)
-            chip.layoutParams = layoutParams
-            chip.setOnClickListener(chipClick)
-            chip.text = line
-            chip.chipIcon = developerIcon
-            chip.setChipIconTintResource(color.resourceId)
-            binding.developers.addView(chip)
+            binding.developers.addView(Chip(activity).apply {
+                this.layoutParams = layoutParams
+                setOnClickListener(chipClick)
+                text = line
+                chipIcon = developerIcon
+                setChipIconTintResource(color.resourceId)
+            })
         }
 
 
@@ -159,11 +160,11 @@ class AboutFragment : DaggerFragment() {
     }
 
     private fun programVersion(context: Context): String {
-        try {
-            return context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        return try {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName
         } catch (e: PackageManager.NameNotFoundException) {
             Log.e(AboutFragment::class.java.name, "Name not found on PersianCalendarUtils.programVersion")
-            return ""
+            ""
         }
 
     }
