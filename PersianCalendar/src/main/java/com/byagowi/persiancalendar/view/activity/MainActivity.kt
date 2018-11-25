@@ -16,6 +16,7 @@ import androidx.annotation.IdRes
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.app.ActivityCompat
+import androidx.core.content.edit
 import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.NavOptions
@@ -161,12 +162,12 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
 
             snackbarView.setOnClickListener { snackbar.dismiss() }
             snackbar.setAction("Settings") {
-                prefs.edit().apply {
+                prefs.edit {
                     putString(Constants.PREF_APP_LANGUAGE, Constants.LANG_EN_US)
                     putString(PREF_MAIN_CALENDAR_KEY, "GREGORIAN")
                     putString(PREF_OTHER_CALENDARS_KEY, "ISLAMIC,SHAMSI")
                     putStringSet(PREF_HOLIDAY_TYPES, HashSet())
-                }.apply()
+                }
 
                 restartToSettings()
             }
@@ -174,7 +175,7 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
             snackbar.show()
 
             // Show this snackbar only once
-            prefs.edit().apply { putBoolean(Constants.CHANGE_LANGUAGE_IS_PROMOTED_ONCE, true) }.apply()
+            prefs.edit { putBoolean(Constants.CHANGE_LANGUAGE_IS_PROMOTED_ONCE, true) }
         }
 
 
@@ -247,8 +248,7 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
                 }
                 else -> persianDigits = true
             }
-
-            sharedPreferences.edit().apply {
+            sharedPreferences.edit {
                 putBoolean(PREF_PERSIAN_DIGITS, persianDigits)
                 // Enable Afghanistan holidays when Dari or Pashto is set
                 if (changeToAfghanistanHolidays) {
@@ -289,7 +289,7 @@ class MainActivity : DaggerAppCompatActivity(), SharedPreferences.OnSharedPrefer
                         putStringSet(PREF_WEEK_ENDS, DEFAULT_WEEK_ENDS)
                     }
                 }
-            }.apply()
+            }
         }
 
         if (key == PREF_SHOW_DEVICE_CALENDAR_EVENTS) {

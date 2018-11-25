@@ -1,6 +1,5 @@
 package com.byagowi.persiancalendar.view.activity
 
-import android.content.Context
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.Ringtone
@@ -12,6 +11,7 @@ import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.getSystemService
 import androidx.databinding.DataBindingUtil
 import com.byagowi.persiancalendar.Constants
 import com.byagowi.persiancalendar.R
@@ -52,8 +52,7 @@ class AthanActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager?
-        audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, Utils.getAthanVolume(this), 0)
+        getSystemService<AudioManager>()?.setStreamVolume(AudioManager.STREAM_ALARM, Utils.getAthanVolume(this), 0)
 
         val customAthanUri = Utils.getCustomAthanUri(this)
         if (customAthanUri != null) {
@@ -107,8 +106,7 @@ class AthanActivity : AppCompatActivity() {
         mHandler.postDelayed(mStopTask, TimeUnit.SECONDS.toMillis(10))
 
         try {
-            val telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager?
-            telephonyManager?.listen(mPhoneStateListener, PhoneStateListener.LISTEN_CALL_STATE)
+            getSystemService<TelephonyManager>()?.listen(mPhoneStateListener, PhoneStateListener.LISTEN_CALL_STATE)
         } catch (e: Exception) {
             Log.e(AthanActivity::class.java.name, "TelephonyManager handling fail", e)
         }
@@ -128,8 +126,7 @@ class AthanActivity : AppCompatActivity() {
 
     private fun stop() {
         try {
-            val telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager?
-            telephonyManager?.listen(mPhoneStateListener, PhoneStateListener.LISTEN_NONE)
+            getSystemService<TelephonyManager>()?.listen(mPhoneStateListener, PhoneStateListener.LISTEN_NONE)
             mPhoneStateListener = null
         } catch (e: RuntimeException) {
             Log.e(AthanActivity::class.java.name, "TelephonyManager handling fail", e)
