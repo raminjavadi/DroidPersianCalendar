@@ -49,12 +49,12 @@ import javax.inject.Inject
 
 class CalendarFragment : DaggerFragment() {
     @Inject
-    lateinit var appDependency: AppDependency // same object from App
+    lateinit var mAppDependency: AppDependency // same object from App
     @Inject
-    lateinit var mainActivityDependency: MainActivityDependency // same object from MainActivity
+    lateinit var mMainActivityDependency: MainActivityDependency // same object from MainActivity
     var mFirstTime = true
     private val mCalendar = Calendar.getInstance()
-    private var mCoordinate: Coordinate? = null
+    private lateinit var mCoordinate: Coordinate
     var viewPagerPosition: Int = 0
         private set
     private lateinit var mMainBinding: FragmentCalendarBinding
@@ -77,7 +77,7 @@ class CalendarFragment : DaggerFragment() {
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
 
-        val context = mainActivityDependency.mainActivity
+        val context = mMainActivityDependency.mainActivity
 
         setHasOptionsMenu(true)
 
@@ -96,7 +96,7 @@ class CalendarFragment : DaggerFragment() {
             else
                 mMainBinding.todayButton.hide()
         }
-        mMainBinding.todayButton.setOnClickListener { v -> bringTodayYearMonth() }
+        mMainBinding.todayButton.setOnClickListener { bringTodayYearMonth() }
         tabs.add(mCalendarsView)
 
         titles.add(getString(R.string.events))
@@ -110,15 +110,14 @@ class CalendarFragment : DaggerFragment() {
             // Don't do the same for others tabs, it is problematic
         }
 
-        mCoordinate = Utils.getCoordinate(context)
-        if (mCoordinate != null) {
+        if (!this::mCoordinate.isInitialized) {
             titles.add(getString(R.string.owghat))
             mOwghatBinding = OwghatTabContentBinding.inflate(inflater, container, false)
             tabs.add(mOwghatBinding.root)
-            mOwghatBinding.root.setOnClickListener({ this.onOwghatClick(it) })
-            mOwghatBinding.cityName.setOnClickListener({ this.onOwghatClick(it) })
+            mOwghatBinding.root.setOnClickListener { this.onOwghatClick(it) }
+            mOwghatBinding.cityName.setOnClickListener { this.onOwghatClick(it) }
             // Easter egg to test AthanActivity
-            mOwghatBinding.cityName.setOnLongClickListener { v ->
+            mOwghatBinding.cityName.setOnLongClickListener {
                 Utils.startAthan(context, "FAJR")
                 true
             }
@@ -135,7 +134,7 @@ class CalendarFragment : DaggerFragment() {
         }
 
         mMainBinding.cardsViewPager.adapter = CardTabsAdapter(childFragmentManager,
-                appDependency, tabs, titles)
+                mAppDependency, tabs, titles)
         mMainBinding.tabLayout.setupWithViewPager(mMainBinding.cardsViewPager)
 
         mCalendarAdapterHelper = CalendarAdapter.CalendarAdapterHelper(UIUtils.isRTL(context))
@@ -145,7 +144,7 @@ class CalendarFragment : DaggerFragment() {
 
         mMainBinding.calendarViewPager.addOnPageChangeListener(mChangeListener)
 
-        var lastTab = appDependency.sharedPreferences
+        var lastTab = mAppDependency.sharedPreferences
                 .getInt(Constants.LAST_CHOSEN_TAB_KEY, Constants.CALENDARS_TAB)
         if (lastTab >= tabs.size) {
             lastTab = Constants.CALENDARS_TAB
@@ -154,7 +153,7 @@ class CalendarFragment : DaggerFragment() {
         mMainBinding.cardsViewPager.setCurrentItem(lastTab, false)
 
         val today = CalendarUtils.getTodayOfCalendar(Utils.getMainCalendar())
-        mainActivityDependency.mainActivity.setTitleAndSubtitle(CalendarUtils.getMonthName(today),
+        mMainActivityDependency.mainActivity.setTitleAndSubtitle(CalendarUtils.getMonthName(today),
                 Utils.formatNumber(today.year))
 
         return mMainBinding.root
@@ -173,7 +172,7 @@ class CalendarFragment : DaggerFragment() {
     }
 
     fun addEventOnCalendar(jdn: Long) {
-        val activity = mainActivityDependency.mainActivity
+        val activity = mMainActivityDependency.mainActivity
 
         val civil = CivilDate(jdn)
         val time = Calendar.getInstance()
@@ -201,7 +200,7 @@ class CalendarFragment : DaggerFragment() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        val activity = mainActivityDependency.mainActivity
+        val activity = mMainActivityDependency.mainActivity
 
         if (requestCode == CALENDAR_EVENT_ADD_MODIFY_REQUEST_CODE) {
             if (Utils.isShowDeviceCalendarEvents()) {
@@ -218,7 +217,7 @@ class CalendarFragment : DaggerFragment() {
     }
 
     private fun sendBroadcastToMonthFragments(toWhich: Int, addOrModify: Boolean) {
-        appDependency.localBroadcastManager.sendBroadcast(
+        mAppDependency.localBroadcastManager.sendBroadcast(
                 Intent(Constants.BROADCAST_INTENT_TO_MONTH_FRAGMENT)
                         .putExtra(Constants.BROADCAST_FIELD_TO_MONTH_FRAGMENT, toWhich)
                         .putExtra(Constants.BROADCAST_FIELD_EVENT_ADD_MODIFY, addOrModify)
@@ -236,7 +235,7 @@ class CalendarFragment : DaggerFragment() {
                                     CalendarContract.Events.CONTENT_URI, event.id.toLong())),
                             CALENDAR_EVENT_ADD_MODIFY_REQUEST_CODE)
                 } catch (e: Exception) { // Should be ActivityNotFoundException but we don't care really
-                    Toast.makeText(mainActivityDependency.mainActivity,
+                    Toast.makeText(mMainActivityDependency.mainActivity,
                             R.string.device_calendar_does_not_support, Toast.LENGTH_SHORT).show()
                 }
 
@@ -278,7 +277,7 @@ class CalendarFragment : DaggerFragment() {
 
     private fun showEvent(jdn: Long) {
         val events = Utils.getEvents(jdn,
-                CalendarUtils.readDayDeviceEvents(mainActivityDependency.mainActivity, jdn))
+                CalendarUtils.readDayDeviceEvents(mMainActivityDependency.mainActivity, jdn))
         val holidays = Utils.getEventsTitle(events, true, false, false, false)
         val nonHolidays = Utils.getEventsTitle(events, false, false, false, false)
         val deviceEvents = getDeviceEventsTitle(events)
@@ -298,7 +297,7 @@ class CalendarFragment : DaggerFragment() {
             mEventsBinding.holidayTitle.visibility = View.GONE
         }
 
-        if (deviceEvents.length != 0) {
+        if (deviceEvents.isNotEmpty()) {
             mEventsBinding.noEvent.visibility = View.GONE
             mEventsBinding.deviceEventTitle.text = deviceEvents
             contentDescription.append("\n")
@@ -328,7 +327,7 @@ class CalendarFragment : DaggerFragment() {
 
         val messageToShow = SpannableStringBuilder()
 
-        val enabledTypes = appDependency.sharedPreferences
+        val enabledTypes = mAppDependency.sharedPreferences
                 .getStringSet(PREF_HOLIDAY_TYPES, HashSet())
         if (enabledTypes == null || enabledTypes.size == 0) {
             mEventsBinding.noEvent.visibility = View.GONE
@@ -339,7 +338,7 @@ class CalendarFragment : DaggerFragment() {
             val ss = SpannableString(title)
             val clickableSpan = object : ClickableSpan() {
                 override fun onClick(textView: View) {
-                    mainActivityDependency.mainActivity.navigateTo(R.id.settings)
+                    mMainActivityDependency.mainActivity.navigateTo(R.id.settings)
                 }
             }
             ss.setSpan(clickableSpan, 0, title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -360,9 +359,6 @@ class CalendarFragment : DaggerFragment() {
     }
 
     private fun setOwghat(jdn: Long, isToday: Boolean) {
-        if (mCoordinate == null) {
-            return
-        }
 
         val civilDate = CivilDate(jdn)
         mCalendar.set(civilDate.year, civilDate.month - 1, civilDate.dayOfMonth)
@@ -377,8 +373,8 @@ class CalendarFragment : DaggerFragment() {
 
         var moonPhase = 1.0
         try {
-            moonPhase = SunMoonPosition(CalendarUtils.getTodayJdn().toDouble(), mCoordinate!!.latitude,
-                    mCoordinate!!.longitude, 0.0, 0.0).moonPhase
+            moonPhase = SunMoonPosition(CalendarUtils.getTodayJdn().toDouble(), mCoordinate.latitude,
+                    mCoordinate.longitude, 0.0, 0.0).moonPhase
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -397,9 +393,8 @@ class CalendarFragment : DaggerFragment() {
     private fun onOwghatClick(v: View) {
         val adapter = mOwghatBinding.timesRecyclerView.adapter
         if (adapter is TimeItemAdapter) {
-            val timesAdapter = adapter as TimeItemAdapter?
-            val expanded = !timesAdapter!!.isExpanded
-            timesAdapter.isExpanded = expanded
+            val expanded = !adapter.isExpanded
+            adapter.isExpanded = expanded
             mOwghatBinding.moreOwghat.setImageResource(if (expanded)
                 R.drawable.ic_keyboard_arrow_up
             else
@@ -446,13 +441,13 @@ class CalendarFragment : DaggerFragment() {
         return (today.year - date.year) * 12 + today.month - date.month
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
-        menu!!.clear()
-        inflater!!.inflate(R.menu.calendar_menu_buttons, menu)
+        menu.clear()
+        inflater.inflate(R.menu.calendar_menu_buttons, menu)
 
         mSearchView = menu.findItem(R.id.search).actionView as SearchView
-        mSearchView.setOnSearchClickListener { v ->
+        mSearchView.setOnSearchClickListener {
             try {
                 mSearchAutoComplete.onItemClickListener = null
             } catch (e: UninitializedPropertyAccessException) {
@@ -469,7 +464,7 @@ class CalendarFragment : DaggerFragment() {
             eventsAdapter.addAll(Utils.getAllEnabledEvents())
             eventsAdapter.addAll(CalendarUtils.getAllEnabledAppointments(context))
             mSearchAutoComplete.setAdapter(eventsAdapter)
-            mSearchAutoComplete.setOnItemClickListener { parent, view, position, id ->
+            mSearchAutoComplete.setOnItemClickListener { parent, _, position, _ ->
                 val ev = parent.getItemAtPosition(position) as AbstractEvent<*>
                 val date = ev.date
                 val type = CalendarUtils.getCalendarTypeFromDate(date)
@@ -485,14 +480,21 @@ class CalendarFragment : DaggerFragment() {
     }
 
     private fun destroySearchView() {
-        mSearchView.setOnSearchClickListener(null)
-        mSearchView.visibility = View.GONE
+        try {
+            mSearchView.setOnSearchClickListener(null)
+            mSearchView.visibility = View.GONE
+        } catch (e: UninitializedPropertyAccessException) {
+            e.printStackTrace()
+        }
 
+        try {
+            mSearchAutoComplete.setAdapter(null)
+            mSearchAutoComplete.onItemClickListener = null
+            mSearchAutoComplete.visibility = View.GONE
+        } catch (e: UninitializedPropertyAccessException) {
+            e.printStackTrace()
+        }
 
-
-        mSearchAutoComplete.setAdapter(null)
-        mSearchAutoComplete.onItemClickListener = null
-        mSearchAutoComplete.visibility = View.GONE
     }
 
     override fun onDestroyOptionsMenu() {
