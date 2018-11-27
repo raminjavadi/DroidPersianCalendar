@@ -110,6 +110,7 @@ class CalendarFragment : DaggerFragment() {
             // Don't do the same for others tabs, it is problematic
         }
 
+        mCoordinate = Utils.getCoordinate(context)!!
         if (!this::mCoordinate.isInitialized) {
             titles.add(getString(R.string.owghat))
             mOwghatBinding = OwghatTabContentBinding.inflate(inflater, container, false)
@@ -372,6 +373,7 @@ class CalendarFragment : DaggerFragment() {
         }
 
         var moonPhase = 1.0
+
         try {
             moonPhase = SunMoonPosition(CalendarUtils.getTodayJdn().toDouble(), mCoordinate.latitude,
                     mCoordinate.longitude, 0.0, 0.0).moonPhase
