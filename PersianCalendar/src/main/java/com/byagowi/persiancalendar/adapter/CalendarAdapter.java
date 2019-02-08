@@ -5,12 +5,13 @@ import android.os.Bundle;
 import com.byagowi.persiancalendar.Constants;
 import com.byagowi.persiancalendar.view.fragment.MonthFragment;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentStatePagerAdapter;
-import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
 
-public class CalendarAdapter extends FragmentStatePagerAdapter {
+public class CalendarAdapter extends FragmentStateAdapter {
     private CalendarAdapterHelper mCalendarAdapterHelper;
 
     public CalendarAdapter(FragmentManager fm, CalendarAdapterHelper calendarAdapterHelper) {
@@ -18,6 +19,7 @@ public class CalendarAdapter extends FragmentStatePagerAdapter {
         mCalendarAdapterHelper = calendarAdapterHelper;
     }
 
+    @NonNull
     @Override
     public Fragment getItem(int position) {
         MonthFragment fragment = new MonthFragment();
@@ -28,30 +30,23 @@ public class CalendarAdapter extends FragmentStatePagerAdapter {
     }
 
     @Override
-    public int getCount() {
+    public int getItemCount() {
         return mCalendarAdapterHelper.getMonthsLimit();
     }
 
     public static class CalendarAdapterHelper {
         private final int MONTHS_LIMIT = 5000; // this should be an even number
-        private boolean isRTL;
 
-        public CalendarAdapterHelper(boolean isRTL) {
-            this.isRTL = isRTL;
-        }
-
-        public void gotoOffset(ViewPager monthViewPager, int offset) {
-            if (monthViewPager.getCurrentItem() != offsetToPosition(offset)) {
-                monthViewPager.setCurrentItem(offsetToPosition(offset));
+        public void gotoOffset(ViewPager2 monthViewPager, int offset, boolean isInitialization,
+                               ViewPager2.OnPageChangeCallback changeListener) {
+            if (monthViewPager.getCurrentItem() != positionToOffset(offset)) {
+                monthViewPager.setCurrentItem(positionToOffset(offset), !isInitialization);
             }
+            changeListener.onPageSelected(offset);
         }
 
         public int positionToOffset(int position) {
-            return isRTL ? position - MONTHS_LIMIT / 2 : MONTHS_LIMIT / 2 - position;
-        }
-
-        int offsetToPosition(int position) {
-            return (isRTL ? position : -position) + MONTHS_LIMIT / 2;
+            return MONTHS_LIMIT / 2 - position;
         }
 
         int getMonthsLimit() {

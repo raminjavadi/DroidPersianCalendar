@@ -73,11 +73,13 @@ dependencies {
     implementation("androidx.preference:preference:1.0.0")
     implementation("androidx.recyclerview:recyclerview:1.0.0")
     implementation("androidx.cardview:cardview:1.0.0")
+    implementation("androidx.viewpager2:viewpager2:1.0.0-alpha01")
     implementation("com.google.android.material:material:1.0.0")
     implementation("android.arch.navigation:navigation-fragment:1.0.0-beta01")
     implementation("android.arch.navigation:navigation-ui:1.0.0-beta01")
     implementation("com.google.android:flexbox:1.1.0")
     implementation("com.google.android.apps.dashclock:dashclock-api:2.0.0")
+
 
     // Please apply this https://issuetracker.google.com/issues/112877717 before enabling it again
     // implementation("android.arch.work:work-runtime:1.0.0-alpha07")

@@ -66,7 +66,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.widget.ViewPager2;
 import dagger.android.support.DaggerFragment;
 
 import static com.byagowi.persiancalendar.Constants.CALENDAR_EVENT_ADD_MODIFY_REQUEST_CODE;
@@ -89,13 +89,12 @@ public class CalendarFragment extends DaggerFragment {
     private SearchView mSearchView;
     private SearchView.SearchAutoComplete mSearchAutoComplete;
     private CalendarAdapter.CalendarAdapterHelper mCalendarAdapterHelper;
-    private ViewPager.OnPageChangeListener mChangeListener = new ViewPager.SimpleOnPageChangeListener() {
+    private ViewPager2.OnPageChangeCallback mChangeListener = new ViewPager2.OnPageChangeCallback() {
         @Override
         public void onPageSelected(int position) {
             sendBroadcastToMonthFragments(mCalendarAdapterHelper.positionToOffset(position), false);
             mMainBinding.todayButton.show();
         }
-
     };
 
     @Nullable
@@ -165,12 +164,12 @@ public class CalendarFragment extends DaggerFragment {
                 appDependency, tabs, titles));
         mMainBinding.tabLayout.setupWithViewPager(mMainBinding.cardsViewPager);
 
-        mCalendarAdapterHelper = new CalendarAdapter.CalendarAdapterHelper(Utils.isRTL(context));
+        mCalendarAdapterHelper = new CalendarAdapter.CalendarAdapterHelper();
         mMainBinding.calendarViewPager.setAdapter(new CalendarAdapter(getChildFragmentManager(),
                 mCalendarAdapterHelper));
-        mCalendarAdapterHelper.gotoOffset(mMainBinding.calendarViewPager, 0);
+        mCalendarAdapterHelper.gotoOffset(mMainBinding.calendarViewPager, 0, true, mChangeListener);
 
-        mMainBinding.calendarViewPager.addOnPageChangeListener(mChangeListener);
+        mMainBinding.calendarViewPager.registerOnPageChangeCallback(mChangeListener);
 
         int lastTab = appDependency.getSharedPreferences()
                 .getInt(Constants.LAST_CHOSEN_TAB_KEY, Constants.CALENDARS_TAB);
@@ -445,7 +444,7 @@ public class CalendarFragment extends DaggerFragment {
         mLastSelectedJdn = -1;
         sendBroadcastToMonthFragments(Constants.BROADCAST_TO_MONTH_FRAGMENT_RESET_DAY, false);
 
-        mCalendarAdapterHelper.gotoOffset(mMainBinding.calendarViewPager, 0);
+        mCalendarAdapterHelper.gotoOffset(mMainBinding.calendarViewPager, 0, false, mChangeListener);
 
         selectDay(Utils.getTodayJdn());
     }
@@ -460,7 +459,7 @@ public class CalendarFragment extends DaggerFragment {
         if (context == null) return;
 
         mViewPagerPosition = calculateViewPagerPositionFromJdn(jdn);
-        mCalendarAdapterHelper.gotoOffset(mMainBinding.calendarViewPager, mViewPagerPosition);
+        mCalendarAdapterHelper.gotoOffset(mMainBinding.calendarViewPager, mViewPagerPosition, false, mChangeListener);
 
         selectDay(jdn);
         sendBroadcastToMonthFragments(mViewPagerPosition, false);

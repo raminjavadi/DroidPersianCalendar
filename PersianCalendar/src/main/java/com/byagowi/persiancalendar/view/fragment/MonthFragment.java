@@ -37,7 +37,6 @@ public class MonthFragment extends DaggerFragment implements View.OnClickListene
     MainActivityDependency mainActivityDependency;
     @Inject
     CalendarFragmentDependency calendarFragmentDependency;
-    private boolean isRTL = false;
     //    @Inject
 //    MonthFragmentDependency monthFragmentDependency;
     private AbstractDate typedDate;
@@ -79,7 +78,7 @@ public class MonthFragment extends DaggerFragment implements View.OnClickListene
                              Bundle savedInstanceState) {
         FragmentMonthBinding fragmentMonthBinding = FragmentMonthBinding.inflate(inflater,
                 container, false);
-        isRTL = Utils.isRTL(mainActivityDependency.getMainActivity());
+        boolean isRTL = Utils.isRTL(mainActivityDependency.getMainActivity());
         Bundle args = getArguments();
         offset = args == null ? 0 : args.getInt(Constants.OFFSET_ARGUMENT);
 
@@ -170,11 +169,11 @@ public class MonthFragment extends DaggerFragment implements View.OnClickListene
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.next:
-                calendarFragmentDependency.getCalendarFragment().changeMonth(isRTL ? -1 : 1);
+                calendarFragmentDependency.getCalendarFragment().changeMonth(1);
                 break;
 
             case R.id.prev:
-                calendarFragmentDependency.getCalendarFragment().changeMonth(isRTL ? 1 : -1);
+                calendarFragmentDependency.getCalendarFragment().changeMonth(-1);
                 break;
         }
     }
