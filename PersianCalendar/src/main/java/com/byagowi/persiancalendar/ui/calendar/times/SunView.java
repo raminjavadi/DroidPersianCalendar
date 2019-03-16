@@ -192,6 +192,10 @@ public class SunView extends View implements ValueAnimator.AnimatorUpdateListene
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        if (curvePath == null || nightPath == null) {
+            onSizeChanged(getWidth(), getHeight(), getWidth(), getHeight());
+        }
+
         canvas.save();
 
         // draw fill of night

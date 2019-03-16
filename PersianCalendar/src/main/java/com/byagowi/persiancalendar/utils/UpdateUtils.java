@@ -7,12 +7,16 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.RemoteViews;
 
 import com.byagowi.persiancalendar.BuildConfig;
@@ -22,12 +26,18 @@ import com.byagowi.persiancalendar.Widget1x1;
 import com.byagowi.persiancalendar.Widget2x2;
 import com.byagowi.persiancalendar.Widget4x1;
 import com.byagowi.persiancalendar.Widget4x2;
+import com.byagowi.persiancalendar.WidgetSunView;
 import com.byagowi.persiancalendar.calendar.AbstractDate;
 import com.byagowi.persiancalendar.entities.AbstractEvent;
 import com.byagowi.persiancalendar.entities.DeviceCalendarEvent;
 import com.byagowi.persiancalendar.praytimes.Clock;
+import com.byagowi.persiancalendar.praytimes.Coordinate;
+import com.byagowi.persiancalendar.praytimes.PrayTimes;
+import com.byagowi.persiancalendar.praytimes.PrayTimesCalculator;
 import com.byagowi.persiancalendar.service.ApplicationService;
 import com.byagowi.persiancalendar.ui.MainActivity;
+import com.byagowi.persiancalendar.ui.calendar.times.SunView;
+import com.cepmuvakkit.times.posAlgo.SunMoonPosition;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -91,7 +101,8 @@ public class UpdateUtils {
         ComponentName widget1x1 = new ComponentName(context, Widget1x1.class),
             widget4x1 = new ComponentName(context, Widget4x1.class),
             widget4x2 = new ComponentName(context, Widget4x2.class),
-            widget2x2 = new ComponentName(context, Widget2x2.class);
+            widget2x2 = new ComponentName(context, Widget2x2.class),
+            widgetSunView = new ComponentName(context, WidgetSunView.class);
 
         if (manager.getAppWidgetIds(widget1x1).length != 0) {
             RemoteViews remoteViews1 = new RemoteViews(context.getPackageName(), R.layout.widget1x1);
@@ -312,6 +323,42 @@ public class UpdateUtils {
         }
         //endregion
 
+        if (manager.getAppWidgetIds(widgetSunView).length != 0) {
+            // https://stackoverflow.com/a/3036736
+            SunView sunView = new SunView(context);
+            sunView.setLayoutParams(new ViewGroup.LayoutParams(400, 400));
+            Bitmap b = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888);
+            Canvas c = new Canvas(b);
+            sunView.layout(sunView.getLeft(), sunView.getTop(), sunView.getRight(), sunView.getBottom());
+
+            double moonPhase = 1;
+//            try {
+            Coordinate coordinate = Utils.getCoordinate(context);
+            if (coordinate != null) {
+                moonPhase = new SunMoonPosition(Utils.getTodayJdn(), coordinate.getLatitude(),
+                    coordinate.getLongitude(), 0, 0).getMoonPhase();
+                PrayTimes prayTimes = PrayTimesCalculator.calculate(Utils.getCalculationMethod(),
+                    new Date(), coordinate);
+                sunView.setSunriseSunsetMoonPhase(prayTimes, moonPhase);
+                sunView.draw(c);
+            }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            paint.setColor(Color.RED);
+            paint.setStyle(Paint.Style.FILL);
+            c.drawRect(0, 0, 100, 100, paint);
+
+            RemoteViews remoteView = new RemoteViews(context.getPackageName(), R.layout.widget_sunview);
+            remoteView.setTextColor(R.id.setLocation, color);
+            remoteView.setViewVisibility(R.id.setLocation, coordinate == null ? View.VISIBLE : View.GONE);
+            remoteView.setViewVisibility(R.id.sunView, coordinate == null ? View.GONE : View.VISIBLE);
+            remoteView.setImageViewBitmap(R.id.sunView, b);
+            remoteView.setContentDescription(R.id.sunView, sunView.getContentDescription());
+            remoteView.setOnClickPendingIntent(R.id.widget_sunview, launchAppPendingIntent);
+            manager.updateAppWidget(widgetSunView, remoteView);
+        }
 
         //
         // Permanent Notification Bar and DashClock Data Extension Update
