@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="themeNames">
+        <item>Işiq</item>
+        <item>Qaranliq</item>
+        <item>Müasir</item>
+        <item>Göy</item>
+    </string-array>
+
+    <string-array name="prayMethodsNames">
+        <item>On iki imam şiəliyi, Leva, Qum</item>
+        <item>Islam beynəlxalq birliyi, Səudiyyə Ərəbistanı</item>
+        <item>Şimali Amerika Islam Əhalisi</item>
+        <item>Misir Mədəniyyət Mərkəzi</item>
+        <item>Umm Al-Qura Universiteti</item>
+        <item>Karaçi İslam Universiteti</item>
+        <item>Geofizika Cəmiyyəti, Tehran Universiteti</item>
+    </string-array>
+
+    <string-array name="prayerTimeNames">
+        <item>Sübh</item>
+        <item>Günorta</item>
+        <item>Axşam</item>
+        <item>Günbatimı</item>
+        <item>Işa</item>
+    </string-array>
+
+    <string-array name="holidays_types">
+        <item>Iran Xüsusi günləri</item>
+        <item>Iran Islam günləri</item>
+        <item>Iran Tarixi günləri</item>
+        <item>Iran Digər günləri</item>
+        <item>Beynəlxalq günləri</item>
+        <item>Əfqanistan Xüsusi günləri</item>
+        <item>Əfqanistan Digər günləri</item>
+    </string-array>
+
+    <string-array name="calendar_type">
+        <item>Günəş təqvimi</item>
+        <item>Ay təqvimi</item>
+        <item>Qriqori təqvimi</item>
+    </string-array>
+
+    <string-array name="calendar_type_abbr">
+        <item>Günəş</item>
+        <item>Ay</item>
+        <item>Qriqori</item>
+    </string-array>
+
+    <string-array name="week_days">
+        <item>Sənbə</item>
+        <item>Bazar</item>
+        <item>Bazar ertəsi</item>
+        <item>Çərşənbə axşami</item>
+        <item>Çərşənbə</item>
+        <item>Cümə axşami</item>
+        <item>Cümə</item>
+    </string-array>
+
+    <string-array name="what_to_show">
+        <item>Digər təqvim 1*4 və 2*2 widget</item>
+        <item>Qeyri tətil günlər 2*2 widget</item>
+        <item>Şəri vaxtlar 2*2 widget (Əgər müəyyən olsa)</item>
+        <item>Yer Şəri vaxtlarda 2*2 widget (Əgər müəyyən olsa)</item>
+    </string-array>
+
+    <string-array name="islamicOffsetNames">
+        <item>2-</item>
+        <item>1-</item>
+        <item>0</item>
+        <item>1+</item>
+        <item>2+</item>
+    </string-array>
+
+    <string-array name="shift_work">
+        <item>Iş həftəsi</item>
+        <item>həftə sonu</item>
+        <item>Axşam Işi</item>
+        <item>Gecə Işi</item>
+    </string-array>
+
+</resources>
